@@ -1,8 +1,9 @@
 package mflix.api.daos;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -10,9 +11,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.BsonField;
+import com.mongodb.client.model.BucketOptions;
+import com.mongodb.client.model.Facet;
+import com.mongodb.client.model.Field;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
+import com.mongodb.client.model.Sorts;
+import com.mongodb.BasicDBObject;
+import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Projections.*;
 
 @Component
 public class MovieDao extends AbstractMFlixDao {
@@ -118,11 +129,34 @@ public class MovieDao extends AbstractMFlixDao {
      */
     public List<Document> getMoviesByCountry(String... country) {
 
-        Bson queryFilter = new Document();
-        Bson projection = new Document();
+    	/*
+    	 * ----> works
+        Bson queryFilter = Filters.in("countries", country);
+        Bson projection = Projections.fields(Projections.include("title"));
+        */
+    	
+    	Bson queryFilter = in("countries", country);
+    	Bson projection = include("title");
+    	
+    	/*
+    	 * ----> works
+    	BasicDBObject queryFilter = new BasicDBObject();
+    	queryFilter.put("countries", new BasicDBObject("$in", country));
+    	BasicDBObject projection = new BasicDBObject();
+    	projection.put("title", 1);
+    	*/
+    	
+    	
+    	
         //TODO> Ticket: Projection - implement the query and projection required by the unit test
+        
         List<Document> movies = new ArrayList<>();
+        
+        moviesCollection.find(queryFilter)
+			.projection(projection)
+			.into(movies);
 
+        
         return movies;
     }
 
